@@ -10,5 +10,9 @@
 * Edit File
 * Exit (with confirmation)
 
+### Used sources for creating:
+* Fyne doc: https://developer.fyne.io/index.html
+* Go with examples: https://golangbyexample.com/
+
 ### Screenshot:
 ![](screenshot.png)
