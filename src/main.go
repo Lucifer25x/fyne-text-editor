@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// Save File
 func save(filename *widget.Entry, entry *widget.Entry) error {
 	myself, err := user.Current()
 	if err != nil {
@@ -37,6 +38,7 @@ func save(filename *widget.Entry, entry *widget.Entry) error {
 	return nil
 }
 
+// Open File
 func open(filename *widget.Entry, entry *widget.Entry, file fyne.URIReadCloser) error {
 	if file != nil {
 		txt, err := ioutil.ReadAll(file)
@@ -66,6 +68,7 @@ func main() {
 		}
 	})
 
+	// Ctrl + S shortcut
 	ctrlS := desktop.CustomShortcut{KeyName: fyne.KeyS, Modifier: desktop.ControlModifier}
 	w.Canvas().AddShortcut(&ctrlS, func(shortcut fyne.Shortcut) {
 		err := save(filename, entry)
@@ -74,6 +77,7 @@ func main() {
 		}
 	})
 
+	// Ctrl + O shortcut
 	ctrlO := desktop.CustomShortcut{KeyName: fyne.KeyO, Modifier: desktop.ControlModifier}
 	w.Canvas().AddShortcut(&ctrlO, func(shortcut fyne.Shortcut) {
 		dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
@@ -86,6 +90,7 @@ func main() {
 
 	vbox := container.NewVBox(filename, entry, saveButton)
 
+	// Menu Elements
 	openfile := fyne.NewMenuItem("Open", func() {
 		dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
 			openErr := open(filename, entry, file)
