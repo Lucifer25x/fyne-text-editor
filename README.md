@@ -1,5 +1,14 @@
-# My First try to make text editor using Fyne
+# Simple Text Editor
 
-| Created for fun
+| Created using fyne
 
-This is really bad and I will make it better than now while learning Fyne.
+### This is really bad example of text editor. But it is just for learning.
+
+### Functions:
+* Open File
+* Save File (Save As)
+* Edit File
+* Exit (with confirmation)
+
+### Screenshot:
+![](screenshot.png)
