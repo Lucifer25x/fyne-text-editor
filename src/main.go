@@ -3,51 +3,48 @@ package main
 import (
 	"io/ioutil"
 	"log"
-	"os/user"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 )
 
-// Save File
-func save(filename *widget.Entry, entry *widget.Entry) error {
-	myself, err := user.Current()
-	if err != nil {
-		return err
-	}
-	homedir := myself.HomeDir
-	desktop := homedir + "/Desktop"
+var currentPath string = ""
+
+func save(w fyne.Window, entry *widget.Entry) error {
 	txt := entry.Text
 	txtbyte := []byte(txt)
-	file := filename.Text
-	path := desktop + "/" + file
 
-	newerr := ioutil.WriteFile(file, txtbyte, 0644)
-
-	if newerr != nil {
-		log.Fatal(newerr)
-		return newerr
+	if len(currentPath) > 0 {
+		newerr := ioutil.WriteFile(currentPath, txtbyte, 0644)
+		if newerr != nil {
+			log.Fatal(newerr)
+			return newerr
+		}
+	} else {
+		dialog.ShowFileSave(func(uc fyne.URIWriteCloser, err error) {
+			newerr := ioutil.WriteFile(uc.URI().Path(), txtbyte, 0644)
+			if newerr != nil {
+				log.Fatal(newerr)
+				return
+			}
+			currentPath = uc.URI().Path()
+		}, w)
 	}
-
-	log.Println("File saved to: " + path)
 
 	return nil
 }
 
-// Open File
-func open(filename *widget.Entry, entry *widget.Entry, file fyne.URIReadCloser) error {
+func open(entry *widget.Entry, file fyne.URIReadCloser) error {
 	if file != nil {
+		currentPath = file.URI().Path()
 		txt, err := ioutil.ReadAll(file)
-		filepath := file.URI()
 		if err != nil {
 			return err
 		}
 		entry.SetText(string(txt))
-		filename.SetText(filepath.Path())
 	}
 
 	return nil
@@ -55,45 +52,45 @@ func open(filename *widget.Entry, entry *widget.Entry, file fyne.URIReadCloser) 
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("Hello World")
+	w := a.NewWindow("Text Editor")
 	w.Resize(fyne.NewSize(800, 500))
 
-	filename := widget.NewEntry()
 	entry := widget.NewMultiLineEntry()
 	entry.SetPlaceHolder("Type here")
-	saveButton := widget.NewButton("Save", func() {
-		err := save(filename, entry)
-		if err != nil {
-			dialog.ShowError(err, w)
-		}
-	})
 
-	// Ctrl + S shortcut
 	ctrlS := desktop.CustomShortcut{KeyName: fyne.KeyS, Modifier: desktop.ControlModifier}
 	w.Canvas().AddShortcut(&ctrlS, func(shortcut fyne.Shortcut) {
-		err := save(filename, entry)
-		if err != nil {
-			dialog.ShowError(err, w)
-		}
+		save(w, entry)
 	})
 
-	// Ctrl + O shortcut
 	ctrlO := desktop.CustomShortcut{KeyName: fyne.KeyO, Modifier: desktop.ControlModifier}
 	w.Canvas().AddShortcut(&ctrlO, func(shortcut fyne.Shortcut) {
 		dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
-			openErr := open(filename, entry, file)
+			openErr := open(entry, file)
 			if openErr != nil {
 				dialog.ShowError(err, w)
 			}
 		}, w).Show()
 	})
 
-	vbox := container.NewVBox(filename, entry, saveButton)
+	ctrlQ := desktop.CustomShortcut{KeyName: fyne.KeyQ, Modifier: desktop.ControlModifier}
+	w.Canvas().AddShortcut(&ctrlQ, func(shortcut fyne.Shortcut) {
+		if len(currentPath) > 0 {
+			dialog.ShowConfirm("Quit", "Are you sure want to quit?", func(b bool) {
+				if b {
+					a.Quit()
+				} else {
+					return
+				}
+			}, w)
+		} else {
+			a.Quit()
+		}
+	})
 
-	// Menu Elements
 	openfile := fyne.NewMenuItem("Open", func() {
 		dialog.NewFileOpen(func(file fyne.URIReadCloser, err error) {
-			openErr := open(filename, entry, file)
+			openErr := open(entry, file)
 			if openErr != nil {
 				dialog.ShowError(err, w)
 			}
@@ -101,11 +98,25 @@ func main() {
 	})
 
 	savefile := fyne.NewMenuItem("Save", func() {
-		save(filename, entry)
+		save(w, entry)
 	})
 
-	w.SetMainMenu(fyne.NewMainMenu(fyne.NewMenu("File", openfile, savefile)))
+	quit := fyne.NewMenuItem("Quit", func() {
+		if len(currentPath) > 0 {
+			dialog.ShowConfirm("Quit", "Are you sure want to quit?", func(b bool) {
+				if b {
+					a.Quit()
+				} else {
+					return
+				}
+			}, w)
+		} else {
+			a.Quit()
+		}
+	})
 
-	w.SetContent(vbox)
+	w.SetMainMenu(fyne.NewMainMenu(fyne.NewMenu("File", openfile, savefile, quit)))
+
+	w.SetContent(entry)
 	w.ShowAndRun()
 }
