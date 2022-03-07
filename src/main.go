@@ -59,6 +59,7 @@ func open(entry *widget.Entry, file fyne.URIReadCloser) error {
 	return nil
 }
 
+//TODO: Fix undo
 func undo(entry *widget.Entry) {
 	if len(entry.Text) > 0 {
 		var lastChar string = entry.Text[len(entry.Text)-1:]
@@ -83,7 +84,14 @@ func find(entry *widget.Entry, w fyne.Window) {
 	dialog.ShowEntryDialog("Find", "Search for text", func(s string) {
 		index := strings.Index(entry.Text, s)
 		if index != -1 {
-			dialog.ShowInformation("Found", fmt.Sprintf("Found %s at %d", s, index), w)
+			row := strings.Count(entry.Text[:index], "\n")
+			foundedLine := strings.Split(entry.Text[:index], "\n")[row]
+			col := len(foundedLine)
+			w.Canvas().Focus(entry)
+			entry.CursorRow = row
+			entry.CursorColumn = col
+			entry.Refresh()
+			dialog.ShowInformation("Found", fmt.Sprintf("Found '%s' at %d (row: %d, col: %d)", s, index, row, col), w)
 		}
 	}, w)
 }
