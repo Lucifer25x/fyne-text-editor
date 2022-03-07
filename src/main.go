@@ -92,6 +92,8 @@ func find(entry *widget.Entry, w fyne.Window) {
 			entry.CursorColumn = col
 			entry.Refresh()
 			dialog.ShowInformation("Found", fmt.Sprintf("Found '%s' at %d (row: %d, col: %d)", s, index, row, col), w)
+		} else {
+			dialog.ShowInformation("Not found", fmt.Sprintf("Could not find '%s'", s), w)
 		}
 	}, w)
 }
@@ -103,6 +105,8 @@ func replace(entry *widget.Entry, w fyne.Window) {
 			dialog.ShowEntryDialog("Replace", "With what?", func(s2 string) {
 				entry.SetText(strings.Replace(entry.Text, s, s2, 1))
 			}, w)
+		} else {
+			dialog.ShowInformation("Not found", fmt.Sprintf("Could not find '%s'", s), w)
 		}
 	}, w)
 }
