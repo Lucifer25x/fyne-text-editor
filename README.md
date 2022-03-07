@@ -2,7 +2,7 @@
 
 | Created using fyne
 
-### This is really bad example of text editor. But it is just for learning.
+### This is a really bad example of text editor. But it is just for learning.
 
 ### Functions:
 * Open File
