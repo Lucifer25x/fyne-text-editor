@@ -25,12 +25,18 @@ func save(w fyne.Window, entry *widget.Entry) error {
 		}
 	} else {
 		dialog.ShowFileSave(func(uc fyne.URIWriteCloser, err error) {
-			newerr := ioutil.WriteFile(uc.URI().Path(), txtbyte, 0644)
-			if newerr != nil {
-				log.Fatal(newerr)
+			if err != nil {
+				dialog.ShowError(err, w)
 				return
 			}
-			currentPath = uc.URI().Path()
+			if uc != nil {
+				newerr := ioutil.WriteFile(uc.URI().Path(), txtbyte, 0644)
+				if newerr != nil {
+					log.Fatal(newerr)
+					return
+				}
+				currentPath = uc.URI().Path()
+			}
 		}, w)
 	}
 
