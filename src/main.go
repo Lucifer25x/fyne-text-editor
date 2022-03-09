@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"path"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -206,6 +208,7 @@ func main() {
 			if openErr != nil {
 				dialog.ShowError(err, w)
 			}
+			w.SetTitle(path.Base(file.URI().Path()) + " - Text Editor")
 		}, w).Show()
 	})
 
@@ -231,6 +234,7 @@ func main() {
 			if openErr != nil {
 				dialog.ShowError(err, w)
 			}
+			w.SetTitle(path.Base(file.URI().Path()) + " - Text Editor")
 		}, w).Show()
 	})
 
@@ -273,10 +277,18 @@ func main() {
 		replace(entry, w)
 	})
 
+	pathEl := fyne.NewMenuItem("Path", func() {
+		if len(currentPath) > 0 {
+			dialog.ShowInformation("Path", currentPath, w)
+		} else {
+			dialog.ShowError(errors.New("No path found"), w)
+		}
+	})
+
 	seperator := fyne.NewMenuItemSeparator()
 
 	w.SetMainMenu(fyne.NewMainMenu(
-		fyne.NewMenu("File", openfile, savefile, newFile, seperator, quit),
+		fyne.NewMenu("File", openfile, savefile, newFile, seperator, pathEl, quit),
 		fyne.NewMenu("Edit", undoEl, redoEl, seperator, findEl, replaceEl),
 	))
 
