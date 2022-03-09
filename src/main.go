@@ -142,10 +142,22 @@ func main() {
 	entry.SetPlaceHolder("Type here")
 
 	entry.OnChanged = func(s string) {
-		if len(undoText) < 6 {
-			undoText = append(undoText, s)
-		} else {
-			undoText = append(undoText[1:], s)
+		if len(s) > 0 {
+			lastChar := s[len(s)-1:]
+			switch lastChar {
+			case "{":
+				entry.SetText(s + "}")
+			case "(":
+				entry.SetText(s + ")")
+			case "[":
+				entry.SetText(s + "]")
+			}
+
+			if len(undoText) < 6 {
+				undoText = append(undoText, s)
+			} else {
+				undoText = append(undoText[1:], s)
+			}
 		}
 	}
 
