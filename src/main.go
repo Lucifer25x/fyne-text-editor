@@ -14,7 +14,8 @@ import (
 )
 
 var currentPath string = ""
-var redoChars []string = []string{}
+var undoText []string = []string{}
+var redoText []string = []string{}
 
 func save(w fyne.Window, entry *widget.Entry) error {
 	txt := entry.Text
@@ -59,24 +60,25 @@ func open(entry *widget.Entry, file fyne.URIReadCloser) error {
 	return nil
 }
 
-//TODO: Fix undo
+//TODO: Improve redo/undo
 func undo(entry *widget.Entry) {
-	if len(entry.Text) > 0 {
-		var lastChar string = entry.Text[len(entry.Text)-1:]
-		if len(redoChars) <= 5 {
-			redoChars = append(redoChars, lastChar)
+	if len(undoText) > 0 {
+		if len(redoText) < 6 {
+			redoText = append(redoText, entry.Text)
 		} else {
-			redoChars = redoChars[1:]
-			redoChars = append(redoChars, lastChar)
+			redoText = redoText[1:]
+			redoText = append(redoText, entry.Text)
 		}
-		entry.SetText(entry.Text[:len(entry.Text)-1])
+		entry.SetText(undoText[len(undoText)-1])
+		undoText = undoText[:len(undoText)-1]
 	}
 }
 
 func redo(entry *widget.Entry) {
-	if len(redoChars) > 0 {
-		entry.SetText(entry.Text + redoChars[len(redoChars)-1])
-		redoChars = redoChars[:len(redoChars)-1]
+	if len(redoText) > 0 {
+		undoText = append(undoText, entry.Text)
+		entry.SetText(redoText[len(redoText)-1])
+		redoText = redoText[:len(redoText)-1]
 	}
 }
 
@@ -113,7 +115,7 @@ func replace(entry *widget.Entry, w fyne.Window) {
 
 func new(entry *widget.Entry, w fyne.Window) {
 	currentPath = ""
-	redoChars = []string{}
+	redoText = []string{}
 
 	dialog.ShowFileSave(func(uc fyne.URIWriteCloser, err error) {
 		if err != nil {
@@ -126,13 +128,26 @@ func new(entry *widget.Entry, w fyne.Window) {
 	}, w)
 }
 
+type Char struct {
+	Char string
+	Row  int
+	Col  int
+}
+
 func main() {
 	a := app.New()
 	w := a.NewWindow("Text Editor")
 	w.Resize(fyne.NewSize(800, 500))
-
 	entry := widget.NewMultiLineEntry()
 	entry.SetPlaceHolder("Type here")
+
+	entry.OnChanged = func(s string) {
+		if len(undoText) < 6 {
+			undoText = append(undoText, s)
+		} else {
+			undoText = append(undoText[1:], s)
+		}
+	}
 
 	// Ctrl + S to save
 	ctrlS := desktop.CustomShortcut{KeyName: fyne.KeyS, Modifier: desktop.ControlModifier}
