@@ -140,19 +140,39 @@ func main() {
 	a := app.New()
 	w := a.NewWindow("Text Editor")
 	w.Resize(fyne.NewSize(800, 500))
+
 	entry := widget.NewMultiLineEntry()
 	entry.SetPlaceHolder("Type here")
 
 	entry.OnChanged = func(s string) {
 		if len(s) > 0 {
 			lastChar := s[len(s)-1:]
+			//TODO: Improve this
 			switch lastChar {
 			case "{":
-				entry.SetText(s + "}")
+				if len(undoText) > 0 {
+					if undoText[len(undoText)-1] != s {
+						entry.SetText(s + "}")
+					}
+				} else {
+					entry.SetText(s + "}")
+				}
 			case "(":
-				entry.SetText(s + ")")
+				if len(undoText) > 0 {
+					if undoText[len(undoText)-1] != s {
+						entry.SetText(s + ")")
+					}
+				} else {
+					entry.SetText(s + ")")
+				}
 			case "[":
-				entry.SetText(s + "]")
+				if len(undoText) > 0 {
+					if undoText[len(undoText)-1] != s {
+						entry.SetText(s + "]")
+					}
+				} else {
+					entry.SetText(s + "]")
+				}
 			}
 
 			if len(undoText) < 6 {
